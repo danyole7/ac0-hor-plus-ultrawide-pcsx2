@@ -1,0 +1,495 @@
+gametitle=Ace Combat Zero: The Belkan War [SLUS-21346] (NTSC-U)
+
+// Target: 3840x1600 = 2.4:1
+
+[Ultrawide Hor+ 2.4:1 - 3840x1600]
+author=danyole7
+description=Corrects 3D projection and vertical FOV for a 2.4:1 display; includes scripted cutscene Hor+ correction. Fully restart the game after updating.
+
+// Preserve nemesis2000's established 16:9 camera calibration.
+// 003FA350 is loaded into f21 at 001D35E0 and copied into f24. These feed
+// camera fields +10C/+114 at 001D3674/001D3678 in the inspected setup path.
+// Value: 428.4449157714844
+patch=1,EE,003FA350,word,43D638F3
+
+// 003FA354 is loaded into f25 at 001D35E4; stored to camera field +110 at
+// 001D367C. Value: 470.9024963378906. Keep the two camera baselines together.
+patch=1,EE,003FA354,word,43EB7385
+
+// Virtual screen width.
+// Constructor 00339400 loads this at 00339468 and stores context+0 at
+// 00339478. Original 44200000 = 640.0; proposed 44580000 = 864.0.
+// New width = 640 * ((3840/1600)/(16/9)) = 864; equivalently 360 * 2.4.
+// Update 00105698 derives X scale = rasterWidth / virtualWidth at 00105704,
+// storing context+198. Thus X scale becomes 640/864 = 20/27 of baseline.
+// Intended result: wider horizontal FOV, unchanged vertical.
+patch=1,EE,003F75AC,word,44580000
+
+// Additional view/replay width, also originally 640.0. Loaded at 002A72D4
+// and 002A7710, then passed as f12 to setter 00105550 (stores context+0).
+// The 16:9 branch selects height 360.0 at 003FD6DC; the 4:3 branch selects
+// 480.0 at 003FD6EC.
+patch=1,EE,003FD6D8,word,44580000
+
+// SPECIAL THANKS:
+// PCSX2's bundled 16:9 patch by nemesis2000 supplies the
+// two camera calibration words. Dipshet's updated Zero ultrawide PCSX2 forum post points
+// to the two virtual-width constants; their load/store and scale calculations
+// were checked in the tested SLUS-21346 ISO. The published 860.0 width is replaced by
+// exact 864.0 for this 2.4:1 target.
+
+[De-stretch UI - Radio subtitles only - 2.4:1]
+author=danyole7
+description=De-stretch mission radio name/subtitles only; enable alongside Hor+ patch and fully restart the game after updating.
+// Ace Combat Zero USA SLUS-21346 / CRC 65729657 ONLY.
+// zero_subtitle_radio_subtitles
+patch=1,EE,000F2800,word,27BDFFC0 // addiu sp,sp,-64
+patch=1,EE,000F2804,word,FFBF0038 // sd ra,+0x38(sp)
+patch=1,EE,000F2808,word,FFA50010 // sd a1,+0x10(sp)
+patch=1,EE,000F280C,word,FFA60018 // sd a2,+0x18(sp)
+patch=1,EE,000F2810,word,AFA00020 // sw zero,+0x20(sp)
+patch=1,EE,000F2814,word,3C190010 // lui t9,0x0010
+patch=1,EE,000F2818,word,00B9C02B // sltu t8,a1,t9
+patch=1,EE,000F281C,word,1700000B // bne t8,zero,0x000F284C
+patch=1,EE,000F2820,word,00000000 // nop
+patch=1,EE,000F2824,word,3C1901FF // lui t9,0x01FF
+patch=1,EE,000F2828,word,3739FFFD // ori t9,t9,0xfffd
+patch=1,EE,000F282C,word,00B9C02B // sltu t8,a1,t9
+patch=1,EE,000F2830,word,13000006 // beq t8,zero,0x000F284C
+patch=1,EE,000F2834,word,00000000 // nop
+patch=1,EE,000F2838,word,30B80003 // andi t8,a1,0x3
+patch=1,EE,000F283C,word,17000003 // bne t8,zero,0x000F284C
+patch=1,EE,000F2840,word,00000000 // nop
+patch=1,EE,000F2844,word,8CB80000 // lw t8,+0x0(a1)
+patch=1,EE,000F2848,word,AFB80020 // sw t8,+0x20(sp)
+// zero_subtitle_original_radio
+patch=1,EE,000F284C,word,0C09DE70 // jal 0x002779C0
+patch=1,EE,000F2850,word,00000000 // nop
+patch=1,EE,000F2854,word,FFA20028 // sd v0,+0x28(sp)
+patch=1,EE,000F2858,word,FFA30030 // sd v1,+0x30(sp)
+patch=1,EE,000F285C,word,10400035 // beq v0,zero,0x000F2934
+patch=1,EE,000F2860,word,00000000 // nop
+patch=1,EE,000F2864,word,DFA60018 // ld a2,+0x18(sp)
+patch=1,EE,000F2868,word,3C190010 // lui t9,0x0010
+patch=1,EE,000F286C,word,00D9C02B // sltu t8,a2,t9
+patch=1,EE,000F2870,word,17000030 // bne t8,zero,0x000F2934
+patch=1,EE,000F2874,word,00000000 // nop
+patch=1,EE,000F2878,word,3C1901FF // lui t9,0x01FF
+patch=1,EE,000F287C,word,3739FFD5 // ori t9,t9,0xffd5
+patch=1,EE,000F2880,word,00D9C02B // sltu t8,a2,t9
+patch=1,EE,000F2884,word,1300002B // beq t8,zero,0x000F2934
+patch=1,EE,000F2888,word,00000000 // nop
+patch=1,EE,000F288C,word,30D80003 // andi t8,a2,0x3
+patch=1,EE,000F2890,word,17000028 // bne t8,zero,0x000F2934
+patch=1,EE,000F2894,word,00000000 // nop
+patch=1,EE,000F2898,word,8CC90000 // lw t1,+0x0(a2)
+patch=1,EE,000F289C,word,3C194458 // lui t9,0x4458
+patch=1,EE,000F28A0,word,37390000 // ori t9,t9,0x0
+patch=1,EE,000F28A4,word,15390023 // bne t1,t9,0x000F2934
+patch=1,EE,000F28A8,word,00000000 // nop
+patch=1,EE,000F28AC,word,8CC90004 // lw t1,+0x4(a2)
+patch=1,EE,000F28B0,word,3C1943B4 // lui t9,0x43B4
+patch=1,EE,000F28B4,word,37390000 // ori t9,t9,0x0
+patch=1,EE,000F28B8,word,1539001E // bne t1,t9,0x000F2934
+patch=1,EE,000F28BC,word,00000000 // nop
+patch=1,EE,000F28C0,word,8CC90024 // lw t1,+0x24(a2)
+patch=1,EE,000F28C4,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F28C8,word,37390000 // ori t9,t9,0x0
+patch=1,EE,000F28CC,word,15390019 // bne t1,t9,0x000F2934
+patch=1,EE,000F28D0,word,00000000 // nop
+patch=1,EE,000F28D4,word,8CC90028 // lw t1,+0x28(a2)
+patch=1,EE,000F28D8,word,3C1901C0 // lui t9,0x01C0
+patch=1,EE,000F28DC,word,37390200 // ori t9,t9,0x200
+patch=1,EE,000F28E0,word,15390014 // bne t1,t9,0x000F2934
+patch=1,EE,000F28E4,word,00000000 // nop
+patch=1,EE,000F28E8,word,DFA80010 // ld t0,+0x10(sp)
+patch=1,EE,000F28EC,word,3C190010 // lui t9,0x0010
+patch=1,EE,000F28F0,word,0119C02B // sltu t8,t0,t9
+patch=1,EE,000F28F4,word,1700000F // bne t8,zero,0x000F2934
+patch=1,EE,000F28F8,word,00000000 // nop
+patch=1,EE,000F28FC,word,3C1901FF // lui t9,0x01FF
+patch=1,EE,000F2900,word,3739FFFD // ori t9,t9,0xfffd
+patch=1,EE,000F2904,word,0119C02B // sltu t8,t0,t9
+patch=1,EE,000F2908,word,1300000A // beq t8,zero,0x000F2934
+patch=1,EE,000F290C,word,00000000 // nop
+patch=1,EE,000F2910,word,31180003 // andi t8,t0,0x3
+patch=1,EE,000F2914,word,17000007 // bne t8,zero,0x000F2934
+patch=1,EE,000F2918,word,00000000 // nop
+patch=1,EE,000F291C,word,8D050000 // lw a1,+0x0(t0)
+patch=1,EE,000F2920,word,8FA40020 // lw a0,+0x20(sp)
+patch=1,EE,000F2924,word,34068000 // ori a2,zero,0x8000
+patch=1,EE,000F2928,word,34077000 // ori a3,zero,0x7000
+patch=1,EE,000F292C,word,0C03CA52 // jal 0x000F2948
+patch=1,EE,000F2930,word,24080001 // addiu t0,zero,1
+// zero_subtitle_radio_done
+patch=1,EE,000F2934,word,DFA20028 // ld v0,+0x28(sp)
+patch=1,EE,000F2938,word,DFA30030 // ld v1,+0x30(sp)
+patch=1,EE,000F293C,word,DFBF0038 // ld ra,+0x38(sp)
+patch=1,EE,000F2940,word,03E00008 // jr ra
+patch=1,EE,000F2944,word,27BD0040 // addiu sp,sp,64
+// zero_subtitle_geometry
+patch=1,EE,000F2948,word,27BDFFC0 // addiu sp,sp,-64
+patch=1,EE,000F294C,word,FFB00000 // sd s0,+0x0(sp)
+patch=1,EE,000F2950,word,FFB10008 // sd s1,+0x8(sp)
+patch=1,EE,000F2954,word,FFB20020 // sd s2,+0x20(sp)
+patch=1,EE,000F2958,word,FFB30028 // sd s3,+0x28(sp)
+patch=1,EE,000F295C,word,0100902D // daddu s2,t0,zero
+patch=1,EE,000F2960,word,AFA70010 // sw a3,+0x10(sp)
+patch=1,EE,000F2964,word,00C0C02D // daddu t8,a2,zero
+patch=1,EE,000F2968,word,00A0102D // daddu v0,a1,zero
+patch=1,EE,000F296C,word,0000182D // daddu v1,zero,zero
+patch=1,EE,000F2970,word,00824025 // or t0,a0,v0
+patch=1,EE,000F2974,word,00084E42 // srl t1,t0,25
+patch=1,EE,000F2978,word,15200132 // bne t1,zero,0x000F2E44
+patch=1,EE,000F297C,word,00000000 // nop
+patch=1,EE,000F2980,word,3109000F // andi t1,t0,0xf
+patch=1,EE,000F2984,word,1520012F // bne t1,zero,0x000F2E44
+patch=1,EE,000F2988,word,00000000 // nop
+patch=1,EE,000F298C,word,3C090010 // lui t1,0x0010
+patch=1,EE,000F2990,word,0089482B // sltu t1,a0,t1
+patch=1,EE,000F2994,word,1520012B // bne t1,zero,0x000F2E44
+patch=1,EE,000F2998,word,00000000 // nop
+patch=1,EE,000F299C,word,00444823 // subu t1,v0,a0
+patch=1,EE,000F29A0,word,3C0A0004 // lui t2,0x0004
+patch=1,EE,000F29A4,word,354A0001 // ori t2,t2,0x1
+patch=1,EE,000F29A8,word,012A482B // sltu t1,t1,t2
+patch=1,EE,000F29AC,word,11200125 // beq t1,zero,0x000F2E44
+patch=1,EE,000F29B0,word,00000000 // nop
+patch=1,EE,000F29B4,word,00184C02 // srl t1,t8,16
+patch=1,EE,000F29B8,word,15200122 // bne t1,zero,0x000F2E44
+patch=1,EE,000F29BC,word,00000000 // nop
+patch=1,EE,000F29C0,word,0000282D // daddu a1,zero,zero
+// zero_subtitle_pass
+patch=1,EE,000F29C4,word,0080402D // daddu t0,a0,zero
+patch=1,EE,000F29C8,word,0000882D // daddu s1,zero,zero
+patch=1,EE,000F29CC,word,24130001 // addiu s3,zero,1
+// zero_subtitle_packet
+patch=1,EE,000F29D0,word,11020115 // beq t0,v0,0x000F2E28
+patch=1,EE,000F29D4,word,00000000 // nop
+patch=1,EE,000F29D8,word,8D090000 // lw t1,+0x0(t0)
+patch=1,EE,000F29DC,word,312AFFFF // andi t2,t1,0xffff
+patch=1,EE,000F29E0,word,11400118 // beq t2,zero,0x000F2E44
+patch=1,EE,000F29E4,word,00000000 // nop
+patch=1,EE,000F29E8,word,2D4B1001 // sltiu t3,t2,4097
+patch=1,EE,000F29EC,word,11600115 // beq t3,zero,0x000F2E44
+patch=1,EE,000F29F0,word,00000000 // nop
+patch=1,EE,000F29F4,word,8D0B0008 // lw t3,+0x8(t0)
+patch=1,EE,000F29F8,word,15600112 // bne t3,zero,0x000F2E44
+patch=1,EE,000F29FC,word,00000000 // nop
+patch=1,EE,000F2A00,word,3C0B5000 // lui t3,0x5000
+patch=1,EE,000F2A04,word,016A5825 // or t3,t3,t2
+patch=1,EE,000F2A08,word,8D0C000C // lw t4,+0xc(t0)
+patch=1,EE,000F2A0C,word,156C010D // bne t3,t4,0x000F2E44
+patch=1,EE,000F2A10,word,00000000 // nop
+patch=1,EE,000F2A14,word,1220001C // beq s1,zero,0x000F2A88
+patch=1,EE,000F2A18,word,00000000 // nop
+patch=1,EE,000F2A1C,word,3C0B3000 // lui t3,0x3000
+patch=1,EE,000F2A20,word,016A5825 // or t3,t3,t2
+patch=1,EE,000F2A24,word,152B0107 // bne t1,t3,0x000F2E44
+patch=1,EE,000F2A28,word,00000000 // nop
+patch=1,EE,000F2A2C,word,022A582B // sltu t3,s1,t2
+patch=1,EE,000F2A30,word,15600104 // bne t3,zero,0x000F2E44
+patch=1,EE,000F2A34,word,00000000 // nop
+patch=1,EE,000F2A38,word,8D0B0004 // lw t3,+0x4(t0)
+patch=1,EE,000F2A3C,word,3C0C0010 // lui t4,0x0010
+patch=1,EE,000F2A40,word,016C602B // sltu t4,t3,t4
+patch=1,EE,000F2A44,word,158000FF // bne t4,zero,0x000F2E44
+patch=1,EE,000F2A48,word,00000000 // nop
+patch=1,EE,000F2A4C,word,000B6642 // srl t4,t3,25
+patch=1,EE,000F2A50,word,158000FC // bne t4,zero,0x000F2E44
+patch=1,EE,000F2A54,word,00000000 // nop
+patch=1,EE,000F2A58,word,316C000F // andi t4,t3,0xf
+patch=1,EE,000F2A5C,word,158000F9 // bne t4,zero,0x000F2E44
+patch=1,EE,000F2A60,word,00000000 // nop
+patch=1,EE,000F2A64,word,000A6100 // sll t4,t2,4
+patch=1,EE,000F2A68,word,016C6021 // addu t4,t3,t4
+patch=1,EE,000F2A6C,word,3C0D0200 // lui t5,0x0200
+patch=1,EE,000F2A70,word,01AC602B // sltu t4,t5,t4
+patch=1,EE,000F2A74,word,158000F3 // bne t4,zero,0x000F2E44
+patch=1,EE,000F2A78,word,00000000 // nop
+patch=1,EE,000F2A7C,word,022A8823 // subu s1,s1,t2
+patch=1,EE,000F2A80,word,0803CA74 // j 0x000F29D0
+patch=1,EE,000F2A84,word,25080010 // addiu t0,t0,16
+// zero_subtitle_cnt
+patch=1,EE,000F2A88,word,3C0B1000 // lui t3,0x1000
+patch=1,EE,000F2A8C,word,016A5825 // or t3,t3,t2
+patch=1,EE,000F2A90,word,152B00EC // bne t1,t3,0x000F2E44
+patch=1,EE,000F2A94,word,00000000 // nop
+patch=1,EE,000F2A98,word,000A5100 // sll t2,t2,4
+patch=1,EE,000F2A9C,word,25080010 // addiu t0,t0,16
+patch=1,EE,000F2AA0,word,010A3021 // addu a2,t0,t2
+patch=1,EE,000F2AA4,word,0046482B // sltu t1,v0,a2
+patch=1,EE,000F2AA8,word,152000E6 // bne t1,zero,0x000F2E44
+patch=1,EE,000F2AAC,word,00000000 // nop
+// zero_subtitle_tag
+patch=1,EE,000F2AB0,word,1106FFC7 // beq t0,a2,0x000F29D0
+patch=1,EE,000F2AB4,word,00000000 // nop
+patch=1,EE,000F2AB8,word,8D09000C // lw t1,+0xc(t0)
+patch=1,EE,000F2ABC,word,152000E1 // bne t1,zero,0x000F2E44
+patch=1,EE,000F2AC0,word,00000000 // nop
+patch=1,EE,000F2AC4,word,8D090000 // lw t1,+0x0(t0)
+patch=1,EE,000F2AC8,word,31297FFF // andi t1,t1,0x7fff
+patch=1,EE,000F2ACC,word,8D0A0004 // lw t2,+0x4(t0)
+patch=1,EE,000F2AD0,word,000A5682 // srl t2,t2,26
+patch=1,EE,000F2AD4,word,8D0B0008 // lw t3,+0x8(t0)
+patch=1,EE,000F2AD8,word,25080010 // addiu t0,t0,16
+patch=1,EE,000F2ADC,word,114000DF // beq t2,zero,0x000F2E5C
+patch=1,EE,000F2AE0,word,00000000 // nop
+patch=1,EE,000F2AE4,word,240C0002 // addiu t4,zero,2
+patch=1,EE,000F2AE8,word,114C0054 // beq t2,t4,0x000F2C3C
+patch=1,EE,000F2AEC,word,00000000 // nop
+patch=1,EE,000F2AF0,word,240C0004 // addiu t4,zero,4
+patch=1,EE,000F2AF4,word,114C002D // beq t2,t4,0x000F2BAC
+patch=1,EE,000F2AF8,word,00000000 // nop
+patch=1,EE,000F2AFC,word,240C000C // addiu t4,zero,12
+patch=1,EE,000F2B00,word,114C0023 // beq t2,t4,0x000F2B90
+patch=1,EE,000F2B04,word,00000000 // nop
+patch=1,EE,000F2B08,word,240C0018 // addiu t4,zero,24
+patch=1,EE,000F2B0C,word,114C0019 // beq t2,t4,0x000F2B74
+patch=1,EE,000F2B10,word,00000000 // nop
+patch=1,EE,000F2B14,word,240C000D // addiu t4,zero,13
+patch=1,EE,000F2B18,word,114C0031 // beq t2,t4,0x000F2BE0
+patch=1,EE,000F2B1C,word,00000000 // nop
+patch=1,EE,000F2B20,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2B24,word,37390009 // ori t9,t9,0x9
+patch=1,EE,000F2B28,word,155900C6 // bne t2,t9,0x000F2E44
+patch=1,EE,000F2B2C,word,00000000 // nop
+patch=1,EE,000F2B30,word,240C0055 // addiu t4,zero,85
+patch=1,EE,000F2B34,word,116C0024 // beq t3,t4,0x000F2BC8
+patch=1,EE,000F2B38,word,00000000 // nop
+patch=1,EE,000F2B3C,word,240C0041 // addiu t4,zero,65
+patch=1,EE,000F2B40,word,116C0024 // beq t3,t4,0x000F2BD4
+patch=1,EE,000F2B44,word,00000000 // nop
+patch=1,EE,000F2B48,word,240C00F0 // addiu t4,zero,240
+patch=1,EE,000F2B4C,word,116C0006 // beq t3,t4,0x000F2B68
+patch=1,EE,000F2B50,word,00000000 // nop
+patch=1,EE,000F2B54,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2B58,word,37390060 // ori t9,t9,0x60
+patch=1,EE,000F2B5C,word,157900B9 // bne t3,t9,0x000F2E44
+patch=1,EE,000F2B60,word,00000000 // nop
+patch=1,EE,000F2B64,word,24100004 // addiu s0,zero,4
+// zero_subtitle_state_list
+patch=1,EE,000F2B68,word,24100004 // addiu s0,zero,4
+patch=1,EE,000F2B6C,word,0803CB02 // j 0x000F2C08
+patch=1,EE,000F2B70,word,240C0010 // addiu t4,zero,16
+// zero_subtitle_ad6
+patch=1,EE,000F2B74,word,3C1900EE // lui t9,0x00EE
+patch=1,EE,000F2B78,word,3739EEEE // ori t9,t9,0xeeee
+patch=1,EE,000F2B7C,word,157900B1 // bne t3,t9,0x000F2E44
+patch=1,EE,000F2B80,word,00000000 // nop
+patch=1,EE,000F2B84,word,00094840 // sll t1,t1,1
+patch=1,EE,000F2B88,word,0803CAE8 // j 0x000F2BA0
+patch=1,EE,000F2B8C,word,00000000 // nop
+// zero_subtitle_ad3
+patch=1,EE,000F2B90,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2B94,word,37390EEE // ori t9,t9,0xeee
+patch=1,EE,000F2B98,word,157900AA // bne t3,t9,0x000F2E44
+patch=1,EE,000F2B9C,word,00000000 // nop
+// zero_subtitle_ad_times3
+patch=1,EE,000F2BA0,word,00096840 // sll t5,t1,1
+patch=1,EE,000F2BA4,word,012D4821 // addu t1,t1,t5
+patch=1,EE,000F2BA8,word,240B000E // addiu t3,zero,14
+// zero_subtitle_ad
+patch=1,EE,000F2BAC,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2BB0,word,3739000E // ori t9,t9,0xe
+patch=1,EE,000F2BB4,word,157900A3 // bne t3,t9,0x000F2E44
+patch=1,EE,000F2BB8,word,00000000 // nop
+patch=1,EE,000F2BBC,word,0000802D // daddu s0,zero,zero
+patch=1,EE,000F2BC0,word,0803CB02 // j 0x000F2C08
+patch=1,EE,000F2BC4,word,240C0010 // addiu t4,zero,16
+// zero_subtitle_xyz_list
+patch=1,EE,000F2BC8,word,24100001 // addiu s0,zero,1
+patch=1,EE,000F2BCC,word,0803CB02 // j 0x000F2C08
+patch=1,EE,000F2BD0,word,240C0008 // addiu t4,zero,8
+// zero_subtitle_flat
+patch=1,EE,000F2BD4,word,24100003 // addiu s0,zero,3
+patch=1,EE,000F2BD8,word,0803CB02 // j 0x000F2C08
+patch=1,EE,000F2BDC,word,240C0010 // addiu t4,zero,16
+// zero_subtitle_uv
+patch=1,EE,000F2BE0,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2BE4,word,37390413 // ori t9,t9,0x413
+patch=1,EE,000F2BE8,word,15790096 // bne t3,t9,0x000F2E44
+patch=1,EE,000F2BEC,word,00000000 // nop
+patch=1,EE,000F2BF0,word,24100002 // addiu s0,zero,2
+patch=1,EE,000F2BF4,word,00096900 // sll t5,t1,4
+patch=1,EE,000F2BF8,word,000948C0 // sll t1,t1,3
+patch=1,EE,000F2BFC,word,012D4821 // addu t1,t1,t5
+patch=1,EE,000F2C00,word,0803CB03 // j 0x000F2C0C
+patch=1,EE,000F2C04,word,240C0018 // addiu t4,zero,24
+// zero_subtitle_size16
+patch=1,EE,000F2C08,word,00094900 // sll t1,t1,4
+// zero_subtitle_data_end
+patch=1,EE,000F2C0C,word,01093821 // addu a3,t0,t1
+patch=1,EE,000F2C10,word,24E9000F // addiu t1,a3,15
+patch=1,EE,000F2C14,word,00094902 // srl t1,t1,4
+patch=1,EE,000F2C18,word,00094900 // sll t1,t1,4
+patch=1,EE,000F2C1C,word,00C9482B // sltu t1,a2,t1
+patch=1,EE,000F2C20,word,15200088 // bne t1,zero,0x000F2E44
+patch=1,EE,000F2C24,word,00000000 // nop
+patch=1,EE,000F2C28,word,24090004 // addiu t1,zero,4
+patch=1,EE,000F2C2C,word,16090009 // bne s0,t1,0x000F2C54
+patch=1,EE,000F2C30,word,00000000 // nop
+patch=1,EE,000F2C34,word,0803CB86 // j 0x000F2E18
+patch=1,EE,000F2C38,word,00E0402D // daddu t0,a3,zero
+// zero_subtitle_image
+patch=1,EE,000F2C3C,word,11200081 // beq t1,zero,0x000F2E44
+patch=1,EE,000F2C40,word,00000000 // nop
+patch=1,EE,000F2C44,word,1506007F // bne t0,a2,0x000F2E44
+patch=1,EE,000F2C48,word,00000000 // nop
+patch=1,EE,000F2C4C,word,0803CA74 // j 0x000F29D0
+patch=1,EE,000F2C50,word,0120882D // daddu s1,t1,zero
+// zero_subtitle_record
+patch=1,EE,000F2C54,word,11070070 // beq t0,a3,0x000F2E18
+patch=1,EE,000F2C58,word,00000000 // nop
+patch=1,EE,000F2C5C,word,0100782D // daddu t7,t0,zero
+patch=1,EE,000F2C60,word,1200000A // beq s0,zero,0x000F2C8C
+patch=1,EE,000F2C64,word,00000000 // nop
+patch=1,EE,000F2C68,word,240D0001 // addiu t5,zero,1
+patch=1,EE,000F2C6C,word,120D001C // beq s0,t5,0x000F2CE0
+patch=1,EE,000F2C70,word,00000000 // nop
+patch=1,EE,000F2C74,word,250F0008 // addiu t7,t0,8
+patch=1,EE,000F2C78,word,240D0003 // addiu t5,zero,3
+patch=1,EE,000F2C7C,word,120D0018 // beq s0,t5,0x000F2CE0
+patch=1,EE,000F2C80,word,00000000 // nop
+patch=1,EE,000F2C84,word,0803CB38 // j 0x000F2CE0
+patch=1,EE,000F2C88,word,250F0010 // addiu t7,t0,16
+// zero_subtitle_ad_record
+patch=1,EE,000F2C8C,word,910D0008 // lbu t5,+0x8(t0)
+patch=1,EE,000F2C90,word,240E004C // addiu t6,zero,76
+patch=1,EE,000F2C94,word,11AE002F // beq t5,t6,0x000F2D54
+patch=1,EE,000F2C98,word,00000000 // nop
+patch=1,EE,000F2C9C,word,240E0040 // addiu t6,zero,64
+patch=1,EE,000F2CA0,word,11AE0034 // beq t5,t6,0x000F2D74
+patch=1,EE,000F2CA4,word,00000000 // nop
+patch=1,EE,000F2CA8,word,240E0041 // addiu t6,zero,65
+patch=1,EE,000F2CAC,word,11AE0031 // beq t5,t6,0x000F2D74
+patch=1,EE,000F2CB0,word,00000000 // nop
+patch=1,EE,000F2CB4,word,240E0018 // addiu t6,zero,24
+patch=1,EE,000F2CB8,word,11AE0019 // beq t5,t6,0x000F2D20
+patch=1,EE,000F2CBC,word,00000000 // nop
+patch=1,EE,000F2CC0,word,240E0019 // addiu t6,zero,25
+patch=1,EE,000F2CC4,word,11AE0016 // beq t5,t6,0x000F2D20
+patch=1,EE,000F2CC8,word,00000000 // nop
+patch=1,EE,000F2CCC,word,31AD00F7 // andi t5,t5,0xf7
+patch=1,EE,000F2CD0,word,25ADFFFC // addiu t5,t5,-4
+patch=1,EE,000F2CD4,word,2DAD0002 // sltiu t5,t5,2
+patch=1,EE,000F2CD8,word,11A0004D // beq t5,zero,0x000F2E10
+patch=1,EE,000F2CDC,word,00000000 // nop
+// zero_subtitle_xy
+patch=1,EE,000F2CE0,word,10A0004B // beq a1,zero,0x000F2E10
+patch=1,EE,000F2CE4,word,00000000 // nop
+patch=1,EE,000F2CE8,word,12600049 // beq s3,zero,0x000F2E10
+patch=1,EE,000F2CEC,word,00000000 // nop
+patch=1,EE,000F2CF0,word,95ED0000 // lhu t5,+0x0(t7)
+patch=1,EE,000F2CF4,word,01B86823 // subu t5,t5,t8
+patch=1,EE,000F2CF8,word,000D7100 // sll t6,t5,4
+patch=1,EE,000F2CFC,word,000D6880 // sll t5,t5,2
+patch=1,EE,000F2D00,word,01AE6821 // addu t5,t5,t6
+patch=1,EE,000F2D04,word,2419001B // addiu t9,zero,27
+patch=1,EE,000F2D08,word,01B9001A // div t5,t9
+patch=1,EE,000F2D0C,word,00006812 // mflo t5
+patch=1,EE,000F2D10,word,01B86821 // addu t5,t5,t8
+patch=1,EE,000F2D14,word,A5ED0000 // sh t5,+0x0(t7)
+patch=1,EE,000F2D18,word,0803CB84 // j 0x000F2E10
+patch=1,EE,000F2D1C,word,00000000 // nop
+// zero_subtitle_offset
+patch=1,EE,000F2D20,word,1260003B // beq s3,zero,0x000F2E10
+patch=1,EE,000F2D24,word,00000000 // nop
+patch=1,EE,000F2D28,word,8D0D0000 // lw t5,+0x0(t0)
+patch=1,EE,000F2D2C,word,8FAE0010 // lw t6,+0x10(sp)
+patch=1,EE,000F2D30,word,15AE0044 // bne t5,t6,0x000F2E44
+patch=1,EE,000F2D34,word,00000000 // nop
+patch=1,EE,000F2D38,word,8D0D0004 // lw t5,+0x4(t0)
+patch=1,EE,000F2D3C,word,3C190000 // lui t9,0x0000
+patch=1,EE,000F2D40,word,37397200 // ori t9,t9,0x7200
+patch=1,EE,000F2D44,word,15B9003F // bne t5,t9,0x000F2E44
+patch=1,EE,000F2D48,word,00000000 // nop
+patch=1,EE,000F2D4C,word,0803CB84 // j 0x000F2E10
+patch=1,EE,000F2D50,word,00000000 // nop
+// zero_subtitle_frame
+patch=1,EE,000F2D54,word,1240002E // beq s2,zero,0x000F2E10
+patch=1,EE,000F2D58,word,00000000 // nop
+patch=1,EE,000F2D5C,word,8D0D0000 // lw t5,+0x0(t0)
+patch=1,EE,000F2D60,word,3C0E0008 // lui t6,0x0008
+patch=1,EE,000F2D64,word,01AE6823 // subu t5,t5,t6
+patch=1,EE,000F2D68,word,2DB30001 // sltiu s3,t5,1
+patch=1,EE,000F2D6C,word,0803CB84 // j 0x000F2E10
+patch=1,EE,000F2D70,word,00000000 // nop
+// zero_subtitle_scissor
+patch=1,EE,000F2D74,word,12400033 // beq s2,zero,0x000F2E44
+patch=1,EE,000F2D78,word,00000000 // nop
+patch=1,EE,000F2D7C,word,12600024 // beq s3,zero,0x000F2E10
+patch=1,EE,000F2D80,word,00000000 // nop
+patch=1,EE,000F2D84,word,8D0D0000 // lw t5,+0x0(t0)
+patch=1,EE,000F2D88,word,3C0E01FF // lui t6,0x01FF
+patch=1,EE,000F2D8C,word,35CE0000 // ori t6,t6,0x0
+patch=1,EE,000F2D90,word,11AE001F // beq t5,t6,0x000F2E10
+patch=1,EE,000F2D94,word,00000000 // nop
+patch=1,EE,000F2D98,word,950D0000 // lhu t5,+0x0(t0)
+patch=1,EE,000F2D9C,word,950E0002 // lhu t6,+0x2(t0)
+patch=1,EE,000F2DA0,word,2DD90200 // sltiu t9,t6,512
+patch=1,EE,000F2DA4,word,13200027 // beq t9,zero,0x000F2E44
+patch=1,EE,000F2DA8,word,00000000 // nop
+patch=1,EE,000F2DAC,word,01CDC82B // sltu t9,t6,t5
+patch=1,EE,000F2DB0,word,17200024 // bne t9,zero,0x000F2E44
+patch=1,EE,000F2DB4,word,00000000 // nop
+patch=1,EE,000F2DB8,word,10A00015 // beq a1,zero,0x000F2E10
+patch=1,EE,000F2DBC,word,00000000 // nop
+patch=1,EE,000F2DC0,word,950D0000 // lhu t5,+0x0(t0)
+patch=1,EE,000F2DC4,word,25ADFF00 // addiu t5,t5,-256
+patch=1,EE,000F2DC8,word,000D7100 // sll t6,t5,4
+patch=1,EE,000F2DCC,word,000D6880 // sll t5,t5,2
+patch=1,EE,000F2DD0,word,01AE6821 // addu t5,t5,t6
+patch=1,EE,000F2DD4,word,2419001B // addiu t9,zero,27
+patch=1,EE,000F2DD8,word,01B9001A // div t5,t9
+patch=1,EE,000F2DDC,word,00006812 // mflo t5
+patch=1,EE,000F2DE0,word,25AD0100 // addiu t5,t5,256
+patch=1,EE,000F2DE4,word,A50D0000 // sh t5,+0x0(t0)
+patch=1,EE,000F2DE8,word,950D0002 // lhu t5,+0x2(t0)
+patch=1,EE,000F2DEC,word,25ADFF00 // addiu t5,t5,-256
+patch=1,EE,000F2DF0,word,000D7100 // sll t6,t5,4
+patch=1,EE,000F2DF4,word,000D6880 // sll t5,t5,2
+patch=1,EE,000F2DF8,word,01AE6821 // addu t5,t5,t6
+patch=1,EE,000F2DFC,word,2419001B // addiu t9,zero,27
+patch=1,EE,000F2E00,word,01B9001A // div t5,t9
+patch=1,EE,000F2E04,word,00006812 // mflo t5
+patch=1,EE,000F2E08,word,25AD0100 // addiu t5,t5,256
+patch=1,EE,000F2E0C,word,A50D0002 // sh t5,+0x2(t0)
+// zero_subtitle_next
+patch=1,EE,000F2E10,word,0803CB15 // j 0x000F2C54
+patch=1,EE,000F2E14,word,010C4021 // addu t0,t0,t4
+// zero_subtitle_record_end
+patch=1,EE,000F2E18,word,2508000F // addiu t0,t0,15
+patch=1,EE,000F2E1C,word,00084102 // srl t0,t0,4
+patch=1,EE,000F2E20,word,0803CAAC // j 0x000F2AB0
+patch=1,EE,000F2E24,word,00084100 // sll t0,t0,4
+// zero_subtitle_pass_end
+patch=1,EE,000F2E28,word,16200006 // bne s1,zero,0x000F2E44
+patch=1,EE,000F2E2C,word,00000000 // nop
+patch=1,EE,000F2E30,word,14A00003 // bne a1,zero,0x000F2E40
+patch=1,EE,000F2E34,word,00000000 // nop
+patch=1,EE,000F2E38,word,0803CA71 // j 0x000F29C4
+patch=1,EE,000F2E3C,word,24050001 // addiu a1,zero,1
+// zero_subtitle_success
+patch=1,EE,000F2E40,word,24030001 // addiu v1,zero,1
+// zero_subtitle_geometry_done
+patch=1,EE,000F2E44,word,DFB00000 // ld s0,+0x0(sp)
+patch=1,EE,000F2E48,word,DFB10008 // ld s1,+0x8(sp)
+patch=1,EE,000F2E4C,word,DFB20020 // ld s2,+0x20(sp)
+patch=1,EE,000F2E50,word,DFB30028 // ld s3,+0x28(sp)
+patch=1,EE,000F2E54,word,03E00008 // jr ra
+patch=1,EE,000F2E58,word,27BD0040 // addiu sp,sp,64
+// zero_subtitle_zero_empty_tag
+patch=1,EE,000F2E5C,word,8D0DFFF0 // lw t5,-0x10(t0)
+patch=1,EE,000F2E60,word,340E8000 // ori t6,zero,0x8000
+patch=1,EE,000F2E64,word,15AEFFF7 // bne t5,t6,0x000F2E44
+patch=1,EE,000F2E68,word,00000000 // nop
+patch=1,EE,000F2E6C,word,8D0DFFF4 // lw t5,-0xc(t0)
+patch=1,EE,000F2E70,word,15A0FFF4 // bne t5,zero,0x000F2E44
+patch=1,EE,000F2E74,word,00000000 // nop
+patch=1,EE,000F2E78,word,1560FFF2 // bne t3,zero,0x000F2E44
+patch=1,EE,000F2E7C,word,00000000 // nop
+patch=1,EE,000F2E80,word,0803CAAC // j 0x000F2AB0
+patch=1,EE,000F2E84,word,00000000 // nop
+// Hook last. Original 001D79B4 = 0C09DE70; delay slot unchanged.
+patch=1,EE,001D79B4,word,0C03CA00
